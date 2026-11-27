@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+
+    <style>
+        body {
+            text-align: center;
+            background-color: white;
+            margin-top: 50px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            justify-content: center;
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 8px 15px;
+        }
+
+        .cell {
+            height: 80px;
+            font-size: 32px;
+            color: #222;
+            background-color: white;
+            border: 1px solid #777;
+        }
+
+        .cell:hover {
+            background-color: #e4edff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Tic-Tac-Toe</h1>
+
+    <button id="one">1 Player</button>
+    <button id="two">2 Players</button>
+
+    <p id="status">Your turn (X)</p>
+
+    <div id="board">
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+    </div>
+
+    <button id="reset">Reset Game</button>
+
+    <script>
+
+        const cells = document.querySelectorAll(".cell");
+        const message = document.getElementById("status");
+
+        let player = "X";
+        let moves = 0;
+        let gameOver = false;
+        let mode = "AI";
+
+        const winningLines = [
+            [0,1,2], [3,4,5], [6,7,8],
+            [0,3,6], [1,4,7], [2,5,8],
+            [0,4,8], [2,4,6]
+        ];
+
+        // Check winner
+        function hasWon(mark) {
+            return winningLines.some(line =>
+                line.every(i => cells[i].textContent === mark)
+            );
+        }
+
+        // Check game result
+        function checkGame() {
+
+            if (hasWon(player)) {
+                message.textContent = `Player ${player} wins!`;
+                gameOver = true;
+                return true;
+            }
+
+            if (moves === 9) {
+                message.textContent = "It's a draw!";
+                gameOver = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        // AI move
+        function aiMove() {
+
+            let move = -1;
+
+            // Win or block
+            for (let mark of ["O", "X"]) {
+
+                for (let line of winningLines) {
+
+                    let empty = line.filter(i =>
+                        cells[i].textContent === ""
+                    );
+
+                    if (empty.length === 1 &&
+                        line.filter(i =>
+                            cells[i].textContent === mark
+                        ).length === 2) {
+
+                        move = empty[0];
+                        break;
+                    }
+                }
+
+                if (move !== -1) break;
+            }
+
+            // Random move if no winning or blocking move
+            if (move === -1) {
+
+                let empty = [...cells].map((c, i) =>
+                    c.textContent === "" ? i : -1
+                ).filter(i => i !== -1);
+
+                move = empty[Math.floor(Math.random() * empty.length)];
+            }
+
+            cells[move].textContent = "O";
+            moves++;
+            player = "O";
+
+            if (!checkGame()) {
+                player = "X";
+                message.textContent = "Your turn (X)";
+            }
+        }
+
+        // Player move
+        function playTurn(event) {
+
+            const cell = event.currentTarget;
+
+            if (gameOver || cell.textContent !== "") return;
+
+            cell.textContent = player;
+            moves++;
+
+            if (checkGame()) return;
+
+            if (mode === "AI") {
+
+                player = "O";
+                message.textContent = "AI is thinking...";
+
+                setTimeout(aiMove, 400);
+
+            } else {
+
+                player = player === "X" ? "O" : "X";
+                message.textContent = `Player ${player}'s turn`;
+            }
+        }
+
+        // Change game mode
+        function setMode(selectedMode) {
+            mode = selectedMode;
+            resetGame();
+        }
+
+        // Reset game
+        function resetGame() {
+
+            cells.forEach(cell => cell.textContent = "");
+
+            player = "X";
+            moves = 0;
+            gameOver = false;
+
+            message.textContent = mode === "AI"
+                ? "Your turn (X)"
+                : "Player X's turn";
+        }
+
+        // Event listeners
+        cells.forEach(cell =>
+            cell.addEventListener("click", playTurn)
+        );
+
+        document.getElementById("one").addEventListener("click", () => {
+            setMode("AI");
+        });
+
+        document.getElementById("two").addEventListener("click", () => {
+            setMode("2P");
+        });
+
+        document.getElementById("reset").addEventListener("click", resetGame);
+
+    </script>
+
+</body>
+</html>
